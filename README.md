@@ -1,8 +1,11 @@
+# omscs-buzzport-parser
+
+Given the HTML from the Buzzport advanced course search, generate a CSV of
+courses an OMSCS student can sign up for sorted by the number of remaining
+slots.
+
 Run `python parser.py` to do everything. Requires `table.html` in the same
 directory in order to parse the available courses.
-
-Will automatically filter only Foundational courses that are able to be
-registered for by an OMSCS student.
 
 ### table.html
 
