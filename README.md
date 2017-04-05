@@ -1,13 +1,23 @@
 # omscs-buzzport-parser
 
-Given the HTML from the Buzzport advanced course search, generate a CSV of
-courses an OMSCS student can sign up for sorted by the number of remaining
-slots.
+Generates a CSV of courses available for an OMSCS student to sign up for sorted by the number of remaining slots.
 
-Run `python parser.py` to do everything. Requires `table.html` in the same
-directory in order to parse the available courses.
+### How To
 
-### table.html
+#### Navigating GA Tech's OSCAR
 
-Raw `<tbody>` from the Buzzport registration page. Make sure to delete any
-intermediate header `<tr>`s, only keeping the very first one.
+1. Login to BuzzPort, hit `Student` and then find `OSCAR`.
+2. Navigate to `Student Services & Financial Aid`.
+3. Navigate to `Registration`.
+4. Navigate to `Look up Classes` and select your desired term.
+5. Hit `Advanced Search`.
+6. On the `Advanced Search` screen, select your desired subject(s) and other criteria. Hit `Section Search`.
+7. Inspect the page source and find the main `<tbody>` element.
+   Copy it into a new file called `table.html` in the `input/` directory.
+   There is a sample `table.html` in the root directory of this repo.
+
+#### Running the parser script
+
+Run `python parser.py`.
+Make sure that you've loaded the course data into `input/table.html`.
+This should generate an output file `table.csv` which will contain the filtered and sorted data.
