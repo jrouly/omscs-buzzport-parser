@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from adjustText import adjust_text
 import matplotlib.pyplot as plt
 import csv
 import pandas
@@ -123,6 +122,15 @@ c['Avg_Rating'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('rat
 c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('workload'))
 c['Review_Count'] = c['Crswlk'].apply(lambda x: agg.get(x).get('count'))
 
+# Calculate weighted distance from 'Optimum'.
+c['WeightedDist'] = c['Avg_Workload'] \
+    .div(c['Avg_Workload'].max()) \
+    .mul(5) \
+    .rsub(0) \
+    .pow(2) \
+    .add(c['Avg_Rating'].rsub(5).pow(2)) \
+    .apply(lambda x: '{:01.2f}'.format(x))
+
 
 ###
 ### Generate Plots
@@ -145,9 +153,6 @@ ax.set_title('Avg_Rating by Avg_Workload')
 ax.set_xlabel('Avg_Workload')
 ax.set_ylabel('Avg_Rating')
 
-# Adjust labeling.
-# adjust_text(labels, xs, ys, arrowprops=dict(arrowstyle='->', color='r', lw=0.5))
-
 
 ###
 ### Final I/O
@@ -159,6 +164,6 @@ ax.figure.savefig('plot.png')
 # Write data frame out to CSV.
 prj = c[[
     'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem',
-    'Avg_Workload', 'Avg_Rating', 'Review_Count'
+    'Avg_Workload', 'Avg_Rating', 'Review_Count', 'WeightedDist'
 ]]
 prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
