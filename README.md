@@ -2,9 +2,17 @@
 
 Generates a CSV of courses available for an OMSCS student to sign up for sorted by the number of remaining slots.
 
-### How To
+## How To
 
-#### Navigating GA Tech's OSCAR
+### Setup
+
+Create a Python virtual environment and install dependencies.
+
+    virtualenv omscs
+    source omscs/bin/activate
+    pip install -r requirements.txt
+
+### Navigating GA Tech's OSCAR
 
 1. Login to BuzzPort, hit `Student` and then find `OSCAR`.
 2. Navigate to `Student Services & Financial Aid`.
@@ -16,8 +24,9 @@ Generates a CSV of courses available for an OMSCS student to sign up for sorted 
    Copy it into a new file called `table.html` in the `input/` directory.
    There is a sample `table.html` in the root directory of this repo.
 
-#### Running the parser script
+### Running the parser script
 
 Run `python parser.py`.
 Make sure that you've loaded the course data into `input/table.html`.
 This should generate an output file `table.csv` which will contain the filtered and sorted data.
+

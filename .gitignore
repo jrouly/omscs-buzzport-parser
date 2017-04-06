@@ -1,1 +1,3 @@
-table.csv
+omscs/
+*.pyc
+input/
