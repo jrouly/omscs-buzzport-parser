@@ -89,8 +89,7 @@ c['Sec'] = c['Sec'].apply(lambda sec: int(sec[1:]))
 format_crosswalk = lambda x: '{}-{:0>3}'.format(x[0], x[1]) if x[0] == 8803 else x[0]
 c['Crswlk'] = c[['Crse', 'Sec']].apply(format_crosswalk, axis=1).map(str)
 
-# Sort and deduplicate.
-c = c.sort_values(by=['Crse', 'Sec'], ascending=True)
+# Deduplicate data.
 c = c.drop_duplicates()
 
 
@@ -122,11 +121,13 @@ c['Avg_Rating'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('rat
 c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('workload'))
 c['Review_Count'] = c['Crswlk'].apply(lambda x: agg.get(x).get('count'))
 
-# Calculate weighted distance from 'Optimum'.
+# Calculate weighted distance from 'Optimum' and sort by it.
 c['WeightedDist'] = (
     ((0 - (c['Avg_Workload'] / c['Avg_Workload'].max()) * 5) ** 2) +
     (c['Avg_Rating'].rsub(5).pow(2))
-).apply(lambda x: '{:01.2f}'.format(x))
+)
+c = c.sort_values(by=['WeightedDist', 'Crse', 'Sec'])
+c['WeightedDist'] = c['WeightedDist'].apply(lambda x: '{:01.2f}'.format(x))
 
 
 ###
@@ -168,5 +169,5 @@ prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
 prj = c[[
     'Subj', 'Crse', 'Sec', 'Foundational', 'Name',
     'Avg_Workload', 'Avg_Rating', 'Review_Count', 'WeightedDist'
-]].sort_values(by=['WeightedDist', 'Crse', 'Sec'])
+]]
 prj.to_csv('reviews.csv', quoting=csv.QUOTE_ALL)
