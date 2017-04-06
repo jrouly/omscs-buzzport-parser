@@ -121,6 +121,7 @@ c['Foundational_Bool'] = c['Crswlk'].apply(lambda x: crs.get(x).get('foundationa
 c['Foundational'] = c['Crswlk'].apply(lambda x: '' if crs.get(x).get('foundational') else 'Not Foundational')
 c['Avg_Rating'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('rating'))
 c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('workload'))
+c['Review_Count'] = c['Crswlk'].apply(lambda x: agg.get(x).get('count'))
 
 
 ###
@@ -157,5 +158,8 @@ ax.set_ylabel('Avg_Rating')
 ax.figure.savefig('plot.png')
 
 # Write data frame out to CSV.
-prj = c[['CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem', 'Avg_Workload', 'Avg_Rating']]
+prj = c[[
+    'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem',
+    'Avg_Workload', 'Avg_Rating', 'Review_Count'
+]]
 prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
