@@ -122,12 +122,12 @@ c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('w
 c['Review_Count'] = c['Crswlk'].apply(lambda x: agg.get(x).get('count'))
 
 # Calculate weighted distance from 'Optimum' and sort by it.
-c['WeightedDist'] = (
+c['Score'] = (
     ((0 - (c['Avg_Workload'] / c['Avg_Workload'].max()) * 5) ** 2) +
     (c['Avg_Rating'].rsub(5).pow(2))
 )
-c = c.sort_values(by=['WeightedDist', 'Crse', 'Sec'])
-c['WeightedDist'] = c['WeightedDist'].apply(lambda x: '{:01.2f}'.format(x))
+c = c.sort_values(by=['Score', 'Crse', 'Sec'])
+c['Score'] = c['Score'].apply(lambda x: '{:01.2f}'.format(x))
 
 
 ###
@@ -159,15 +159,9 @@ ax.set_ylabel('Avg_Rating')
 # Output plot to file.
 ax.figure.savefig('plot.png')
 
-# Write registration CSV.
-prj = c[[
-    'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem'
-]].sort_values(by=['Crse', 'Sec'])
-prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
-
 # Write review CSV.
 prj = c[[
-    'Subj', 'Crse', 'Sec', 'Foundational', 'Name',
-    'Avg_Workload', 'Avg_Rating', 'Review_Count', 'WeightedDist'
+    'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem',
+    'Avg_Workload', 'Avg_Rating', 'Review_Count', 'Score'
 ]]
-prj.to_csv('reviews.csv', quoting=csv.QUOTE_ALL)
+prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
