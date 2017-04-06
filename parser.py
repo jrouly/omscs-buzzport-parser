@@ -138,8 +138,8 @@ xs, ys, labels = c['Avg_Workload'], c['Avg_Rating'], c['Crswlk']
 
 # Construct figure and axes.
 fig, ax = plt.subplots()
-ax.scatter(xs, ys, color='red', marker='o')
-label_point(xs, ys, c['Crswlk'], ax)
+ax.scatter(xs, ys, marker='o', c=c['Review_Count'], cmap=plt.cm.coolwarm)
+label_point(xs, ys, labels, ax)
 ax.invert_xaxis()
 ax.set_title('Avg_Rating by Avg_Workload')
 ax.set_xlabel('Avg_Workload')
@@ -147,7 +147,6 @@ ax.set_ylabel('Avg_Rating')
 
 # Adjust labeling.
 # adjust_text(labels, xs, ys, arrowprops=dict(arrowstyle='->', color='r', lw=0.5))
-
 
 
 ###
