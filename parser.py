@@ -158,9 +158,15 @@ ax.set_ylabel('Avg_Rating')
 # Output plot to file.
 ax.figure.savefig('plot.png')
 
-# Write data frame out to CSV.
+# Write registration CSV.
 prj = c[[
-    'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem',
-    'Avg_Workload', 'Avg_Rating', 'Review_Count', 'WeightedDist'
-]]
+    'CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem'
+]].sort_values(by=['Crse', 'Sec'])
 prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
+
+# Write review CSV.
+prj = c[[
+    'Subj', 'Crse', 'Sec', 'Foundational', 'Name',
+    'Avg_Workload', 'Avg_Rating', 'Review_Count', 'WeightedDist'
+]].sort_values(by=['WeightedDist', 'Crse', 'Sec'])
+prj.to_csv('reviews.csv', quoting=csv.QUOTE_ALL)
