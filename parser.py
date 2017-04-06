@@ -91,11 +91,8 @@ format_crosswalk = lambda x: '{}-{:0>3}'.format(x[0], x[1]) if x[0] == 8803 else
 c['Crswlk'] = c[['Crse', 'Sec']].apply(format_crosswalk, axis=1).map(str)
 
 # Sort and deduplicate.
-c = c.sort_values(by=['Rem'], ascending=False)
+c = c.sort_values(by=['Crse', 'Sec'], ascending=True)
 c = c.drop_duplicates()
-
-# Write data frame out to CSV.
-c.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
 
 
 ###
@@ -120,7 +117,8 @@ agg = aggregate_resp.json()
 
 # Associate desired fields from API responses.
 c['Name'] = c['Crswlk'].apply(lambda x: crs.get(x).get('name'))
-c['Foundational'] = c['Crswlk'].apply(lambda x: crs.get(x).get('foundational'))
+c['Foundational_Bool'] = c['Crswlk'].apply(lambda x: crs.get(x).get('foundational'))
+c['Foundational'] = c['Crswlk'].apply(lambda x: '' if crs.get(x).get('foundational') else 'Not Foundational')
 c['Avg_Rating'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('rating'))
 c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('workload'))
 
@@ -149,6 +147,15 @@ ax.set_ylabel('Avg_Rating')
 # Adjust labeling.
 # adjust_text(labels, xs, ys, arrowprops=dict(arrowstyle='->', color='r', lw=0.5))
 
+
+
+###
+### Final I/O
+###
+
 # Output plot to file.
 ax.figure.savefig('plot.png')
 
+# Write data frame out to CSV.
+prj = c[['CRN', 'Subj', 'Crse', 'Sec', 'Foundational', 'Name', 'Rem', 'Avg_Workload', 'Avg_Rating']]
+prj.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
