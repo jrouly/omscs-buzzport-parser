@@ -1,8 +1,11 @@
 from bs4 import BeautifulSoup
+from adjustText import adjust_text
+import matplotlib.pyplot as plt
 import csv
 import pandas
 import os
 import requests
+import sys
 
 ###
 ### Constants
@@ -26,17 +29,12 @@ SPECIAL_TOPICS_SECTIONS = ['O01', 'O02', 'O03', 'O04', 'O07', 'O08']
 
 
 ###
-### I/O Setup
+### HTML Parsing
 ###
 
 # Set up parser.
 html = open('input/table.html', 'r')
 soup = BeautifulSoup(html, 'html.parser')
-
-
-###
-### HTML Parsing
-###
 
 # Isolate only the data <td> elements.
 rows = [
@@ -71,23 +69,86 @@ wr.close()
 
 # Load up the pandas data frame.
 df = pandas.read_csv('table.csv')
+os.remove('table.csv')
 
 # Filter and select only allowed courses.
-valid_courses = df[df['Crse'].isin(ALLOWED_COURSES)]
+c = df[df['Crse'].isin(ALLOWED_COURSES)]
 
-# Filter only the online sections of the offered courses.
-valid_courses = valid_courses[df.apply(lambda x: str(x['Sec']).startswith('O'), axis=1)]
-valid_courses = valid_courses[df.apply(lambda x: True if x['Crse'] != 8803 else x['Sec'] in SPECIAL_TOPICS_SECTIONS, axis=1)]
+# Filter only the allowed online sections of the offered courses.
+filter_online = lambda x: str(x['Sec']).startswith('O')
+filter_special_topics = lambda x: True if x['Crse'] != 8803 else x['Sec'] in SPECIAL_TOPICS_SECTIONS
+c = c[c.apply(filter_online, axis=1)]
+c = c[c.apply(filter_special_topics, axis=1)]
 
 # Project the desired columns.
-valid_courses = valid_courses[['Select', 'CRN', 'Subj', 'Crse', 'Sec', 'Title', 'Rem', 'WLAct', 'WLRem']]
+c = c[['Select', 'CRN', 'Subj', 'Crse', 'Sec', 'Title', 'Rem', 'WLAct', 'WLRem']]
+
+# Strip section prefixes so they become integers.
+c['Sec'] = c['Sec'].apply(lambda sec: int(sec[1:]))
+
+# Generate a synthetic crosswalk field to work with the Course Reviews APIs.
+format_crosswalk = lambda x: '{}-{:0>3}'.format(x[0], x[1]) if x[0] == 8803 else x[0]
+c['Crswlk'] = c[['Crse', 'Sec']].apply(format_crosswalk, axis=1).map(str)
 
 # Sort and deduplicate.
-valid_courses = valid_courses.sort_values(by=['Rem'], ascending=False)
-valid_courses = valid_courses.drop_duplicates()
+c = c.sort_values(by=['Rem'], ascending=False)
+c = c.drop_duplicates()
 
 # Write data frame out to CSV.
-valid_courses.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
+c.to_csv('courses.csv', quoting=csv.QUOTE_ALL)
 
-# Delete intermediate file.
-os.remove('table.csv')
+
+###
+### Associate Course Review Data
+###
+
+REVIEWS_API_BASE_URL = 'https://gt-surveyor.firebaseio.com'
+COURSE_API_URL = '{}/CRS.json'.format(REVIEWS_API_BASE_URL)
+AGGREGATE_API_URL = '{}/AGG.json'.format(REVIEWS_API_BASE_URL)
+
+# Make requests to external reviews API.
+course_resp = requests.get(COURSE_API_URL)
+aggregate_resp = requests.get(AGGREGATE_API_URL)
+
+# Handle failed requests gracefully.
+if course_resp.status_code >= 400 or aggregate_resp.status_code >= 400:
+    sys.exit()
+
+# Parse json response bodies.
+crs = course_resp.json()
+agg = aggregate_resp.json()
+
+# Associate desired fields from API responses.
+c['Name'] = c['Crswlk'].apply(lambda x: crs.get(x).get('name'))
+c['Foundational'] = c['Crswlk'].apply(lambda x: crs.get(x).get('foundational'))
+c['Avg_Rating'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('rating'))
+c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('workload'))
+
+
+###
+### Generate Plots
+###
+
+def label_point(xs, ys, labels, ax):
+    points_and_labels = pandas.concat({'x': xs, 'y': ys, 'label': labels}, axis=1)
+    for i, data in points_and_labels.iterrows():
+        ax.text(data['x'], data['y'], str(data['label']))
+
+# Alias X data, Y data, Labels.
+xs, ys, labels = c['Avg_Workload'], c['Avg_Rating'], c['Crswlk']
+
+# Construct figure and axes.
+fig, ax = plt.subplots()
+ax.scatter(xs, ys, color='red', marker='o')
+label_point(xs, ys, c['Crswlk'], ax)
+ax.invert_xaxis()
+ax.set_title('Avg_Rating by Avg_Workload')
+ax.set_xlabel('Avg_Workload')
+ax.set_ylabel('Avg_Rating')
+
+# Adjust labeling.
+# adjust_text(labels, xs, ys, arrowprops=dict(arrowstyle='->', color='r', lw=0.5))
+
+# Output plot to file.
+ax.figure.savefig('plot.png')
+
