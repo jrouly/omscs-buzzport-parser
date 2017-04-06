@@ -2,7 +2,11 @@ from bs4 import BeautifulSoup
 import csv
 import pandas
 import os
+import requests
 
+###
+### Constants
+###
 
 # These are the column headers in the <tbody>, in order.
 FIELDNAMES = [
@@ -17,9 +21,22 @@ ALLOWED_COURSES = [
     6460, 6475, 6476, 6505, 6601, 6750, 7637, 7641, 7646, 8803
 ]
 
+# Special topics 8803 availability varies per-section.
+SPECIAL_TOPICS_SECTIONS = ['O01', 'O02', 'O03', 'O04', 'O07', 'O08']
+
+
+###
+### I/O Setup
+###
+
 # Set up parser.
 html = open('input/table.html', 'r')
 soup = BeautifulSoup(html, 'html.parser')
+
+
+###
+### HTML Parsing
+###
 
 # Isolate only the data <td> elements.
 rows = [
@@ -47,14 +64,25 @@ for row in rows:
 html.close()
 wr.close()
 
+
+###
+### Sorting and Filtering
+###
+
 # Load up the pandas data frame.
 df = pandas.read_csv('table.csv')
 
-# Filter and select only relevant courses.
+# Filter and select only allowed courses.
 valid_courses = df[df['Crse'].isin(ALLOWED_COURSES)]
+
+# Filter only the online sections of the offered courses.
 valid_courses = valid_courses[df.apply(lambda x: str(x['Sec']).startswith('O'), axis=1)]
-valid_courses = valid_courses[df.apply(lambda x: True if x['Crse'] != 8803 else x['Sec'] in ['O01', 'O02', 'O03'], axis=1)]
+valid_courses = valid_courses[df.apply(lambda x: True if x['Crse'] != 8803 else x['Sec'] in SPECIAL_TOPICS_SECTIONS, axis=1)]
+
+# Project the desired columns.
 valid_courses = valid_courses[['Select', 'CRN', 'Subj', 'Crse', 'Sec', 'Title', 'Rem', 'WLAct', 'WLRem']]
+
+# Sort and deduplicate.
 valid_courses = valid_courses.sort_values(by=['Rem'], ascending=False)
 valid_courses = valid_courses.drop_duplicates()
 
