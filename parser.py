@@ -123,13 +123,10 @@ c['Avg_Workload'] = c['Crswlk'].apply(lambda x: agg.get(x).get('average').get('w
 c['Review_Count'] = c['Crswlk'].apply(lambda x: agg.get(x).get('count'))
 
 # Calculate weighted distance from 'Optimum'.
-c['WeightedDist'] = c['Avg_Workload'] \
-    .div(c['Avg_Workload'].max()) \
-    .mul(5) \
-    .rsub(0) \
-    .pow(2) \
-    .add(c['Avg_Rating'].rsub(5).pow(2)) \
-    .apply(lambda x: '{:01.2f}'.format(x))
+c['WeightedDist'] = (
+    ((0 - (c['Avg_Workload'] / c['Avg_Workload'].max()) * 5) ** 2) +
+    (c['Avg_Rating'].rsub(5).pow(2))
+).apply(lambda x: '{:01.2f}'.format(x))
 
 
 ###
